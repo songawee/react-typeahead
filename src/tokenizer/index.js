@@ -81,29 +81,30 @@ var TypeaheadTokenizer = React.createClass({
         entry.selectionStart == 0) {
       this._removeTokenForValue(
         this.state.selected[this.state.selected.length - 1]);
-      return false;
+      event.preventDefault();
     }
 
     return true;
   },
 
-  _removeTokenForValue: function(value) {
-    var index = this.state.selected.indexOf(value);
+  _removeTokenForValue: function(event) {
+    var index = this.state.selected.indexOf(event);
     if (index == -1) {
-      return false;
+      event.preventDefault();
+      return;
     }
 
     this.state.selected.splice(index, 1);
     this.setState({selected: this.state.selected});
     this.props.onTokenRemove(this.state.selected);
-    return false;
+    event.preventDefault();
   },
 
-  _addTokenForValue: function(value) {
-    if (this.state.selected.indexOf(value) != -1) {
+  _addTokenForValue: function(event) {
+    if (this.state.selected.indexOf(event) != -1) {
       return;
     }
-    this.state.selected.push(value);
+    this.state.selected.push(event);
     this.setState({selected: this.state.selected});
     this.refs.typeahead.setEntryText("");
     this.props.onTokenAdd(this.state.selected);

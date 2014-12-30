@@ -175,7 +175,7 @@ var Typeahead = require('../typeahead');
  * the text entry widget, prepends a renderable "token", that may be deleted
  * by pressing backspace on the beginning of the line with the keyboard.
  */
-var TypeaheadTokenizer = React.createClass({displayName: 'TypeaheadTokenizer',
+var TypeaheadTokenizer = React.createClass({displayName: "TypeaheadTokenizer",
   propTypes: {
     options: React.PropTypes.array,
     customClasses: React.PropTypes.object,
@@ -212,7 +212,7 @@ var TypeaheadTokenizer = React.createClass({displayName: 'TypeaheadTokenizer',
     var classList = React.addons.classSet(tokenClasses);
     var result = this.state.selected.map(function(selected) {
       return (
-        Token({key: selected, className: classList, 
+        React.createElement(Token, {key: selected, className: classList, 
           onRemove:  this._removeTokenForValue}, 
           selected 
         )
@@ -244,29 +244,30 @@ var TypeaheadTokenizer = React.createClass({displayName: 'TypeaheadTokenizer',
         entry.selectionStart == 0) {
       this._removeTokenForValue(
         this.state.selected[this.state.selected.length - 1]);
-      return false;
+      event.preventDefault();
     }
 
     return true;
   },
 
-  _removeTokenForValue: function(value) {
-    var index = this.state.selected.indexOf(value);
+  _removeTokenForValue: function(event) {
+    var index = this.state.selected.indexOf(event);
     if (index == -1) {
-      return false;
+      event.preventDefault();
+      return;
     }
 
     this.state.selected.splice(index, 1);
     this.setState({selected: this.state.selected});
     this.props.onTokenRemove(this.state.selected);
-    return false;
+    event.preventDefault();
   },
 
-  _addTokenForValue: function(value) {
-    if (this.state.selected.indexOf(value) != -1) {
+  _addTokenForValue: function(event) {
+    if (this.state.selected.indexOf(event) != -1) {
       return;
     }
-    this.state.selected.push(value);
+    this.state.selected.push(event);
     this.setState({selected: this.state.selected});
     this.refs.typeahead.setEntryText("");
     this.props.onTokenAdd(this.state.selected);
@@ -277,9 +278,9 @@ var TypeaheadTokenizer = React.createClass({displayName: 'TypeaheadTokenizer',
     classes[this.props.customClasses.typeahead] = !!this.props.customClasses.typeahead;
     var classList = React.addons.classSet(classes);
     return (
-      React.DOM.div(null, 
+      React.createElement("div", null, 
          this._renderTokens(), 
-        Typeahead({ref: "typeahead", 
+        React.createElement(Typeahead, {ref: "typeahead", 
           className: classList, 
           placeholder: this.props.placeholder, 
           customClasses: this.props.customClasses, 
@@ -305,7 +306,7 @@ var React = window.React || require('react');
  * Encapsulates the rendering of an option that has been "selected" in a
  * TypeaheadTokenizer
  */
-var Token = React.createClass({displayName: 'Token',
+var Token = React.createClass({displayName: "Token",
   propTypes: {
     children: React.PropTypes.string,
     onRemove: React.PropTypes.func
@@ -313,7 +314,7 @@ var Token = React.createClass({displayName: 'Token',
 
   render: function() {
     return this.transferPropsTo(
-      React.DOM.div({className: "typeahead-token"}, 
+      React.createElement("div", {className: "typeahead-token"}, 
         this.props.children, 
         this._makeCloseButton()
       )
@@ -325,9 +326,9 @@ var Token = React.createClass({displayName: 'Token',
       return "";
     }
     return (
-      React.DOM.a({className: "typeahead-token-close", href: "#", onClick: function() {
+      React.createElement("a", {className: "typeahead-token-close", href: "#", onClick: function(event) {
           this.props.onRemove(this.props.children);
-          return false;
+          event.preventDefault();
         }.bind(this)}, "×")
     );
   }
@@ -351,7 +352,7 @@ var fuzzy = require('fuzzy');
  * Renders an text input that shows options nearby that you can use the
  * keyboard or mouse to select.  Requires CSS for MASSIVE DAMAGE.
  */
-var Typeahead = React.createClass({displayName: 'Typeahead',
+var Typeahead = React.createClass({displayName: "Typeahead",
   propTypes: {
     customClasses: React.PropTypes.object,
     maxVisible: React.PropTypes.number,
@@ -368,7 +369,7 @@ var Typeahead = React.createClass({displayName: 'Typeahead',
       customClasses: {},
       defaultValue: "",
       placeholder: "",
-      onKeyDown: function(event) { return true; },
+      onKeyDown: function(event) { return },
       onOptionSelected: function(option) { }
     };
   },
@@ -422,7 +423,7 @@ var Typeahead = React.createClass({displayName: 'Typeahead',
     }
 
     return (
-      TypeaheadSelector({
+      React.createElement(TypeaheadSelector, {
         ref: "sel", options:  this.state.visible, 
         onOptionSelected:  this._onOptionSelected, 
         customClasses: this.props.customClasses})
@@ -439,12 +440,12 @@ var Typeahead = React.createClass({displayName: 'Typeahead',
     this.props.onOptionSelected(option);
   },
 
-  _onTextEntryUpdated: function() {
+  _onTextEntryUpdated: function(event) {
     var value = this.refs.entry.getDOMNode().value;
     this.setState({visible: this.getOptionsForValue(value, this.state.options),
                    selection: null,
                    entryValue: value});
-    return false;
+    event.preventDefault();
   },
 
   _onEnter: function(event) {
@@ -464,7 +465,7 @@ var Typeahead = React.createClass({displayName: 'Typeahead',
     this._onOptionSelected(option)
   },
 
-  eventMap: function(e) {
+  eventMap: function(event) {
     var events = {};
 
     events[KeyEvent.DOM_VK_UP] = this.refs.sel.navUp;
@@ -491,7 +492,7 @@ var Typeahead = React.createClass({displayName: 'Typeahead',
       return this.props.onKeyDown(event);
     }
     // Don't propagate the keystroke back to the DOM/browser
-    return false;
+    event.preventDefault();
   },
 
   render: function() {
@@ -506,8 +507,8 @@ var Typeahead = React.createClass({displayName: 'Typeahead',
     var classList = React.addons.classSet(classes);
 
     return (
-      React.DOM.div({className: classList}, 
-        React.DOM.input({ref: "entry", type: "text", 
+      React.createElement("div", {className: classList}, 
+        React.createElement("input", {ref: "entry", type: "text", 
           placeholder: this.props.placeholder, 
           className: inputClassList, defaultValue: this.state.entryValue, 
           onChange: this._onTextEntryUpdated, onKeyDown: this._onKeyDown}), 
@@ -529,7 +530,7 @@ var React = window.React || require('react/addons');
 /**
  * A single option within the TypeaheadSelector
  */
-var TypeaheadOption = React.createClass({displayName: 'TypeaheadOption',
+var TypeaheadOption = React.createClass({displayName: "TypeaheadOption",
   propTypes: {
     customClasses: React.PropTypes.object,
     onClick: React.PropTypes.func,
@@ -539,7 +540,9 @@ var TypeaheadOption = React.createClass({displayName: 'TypeaheadOption',
   getDefaultProps: function() {
     return {
       customClasses: {},
-      onClick: function() { return false; }
+      onClick: function(event) { 
+        event.preventDefault(); 
+      }
     };
   },
 
@@ -557,8 +560,8 @@ var TypeaheadOption = React.createClass({displayName: 'TypeaheadOption',
     var classList = React.addons.classSet(classes);
 
     return (
-      React.DOM.li({className: classList, onClick: this._onClick}, 
-        React.DOM.a({href: "#", className: this._getClasses(), ref: "anchor"}, 
+      React.createElement("li", {className: classList, onClick: this._onClick}, 
+        React.createElement("a", {href: "#", className: this._getClasses(), ref: "anchor"}, 
            this.props.children
         )
       )
@@ -573,7 +576,7 @@ var TypeaheadOption = React.createClass({displayName: 'TypeaheadOption',
     return React.addons.classSet(classes);
   },
 
-  _onClick: function(e) {
+  _onClick: function(event) {
     return this.props.onClick();
   }
 });
@@ -593,7 +596,7 @@ var TypeaheadOption = require('./option');
  * Container for the options rendered as part of the autocompletion process
  * of the typeahead
  */
-var TypeaheadSelector = React.createClass({displayName: 'TypeaheadSelector',
+var TypeaheadSelector = React.createClass({displayName: "TypeaheadSelector",
   propTypes: {
     options: React.PropTypes.array,
     customClasses: React.PropTypes.object,
@@ -625,7 +628,7 @@ var TypeaheadSelector = React.createClass({displayName: 'TypeaheadSelector',
 
     var results = this.props.options.map(function(result, i) {
       return (
-        TypeaheadOption({ref: result, key: result, 
+        React.createElement(TypeaheadOption, {ref: result, key: result, 
           hover: this.state.selectionIndex === i, 
           customClasses: this.props.customClasses, 
           onClick: this._onClick.bind(this, result)}, 
@@ -633,7 +636,7 @@ var TypeaheadSelector = React.createClass({displayName: 'TypeaheadSelector',
         )
       );
     }, this);
-    return React.DOM.ul({className: classList}, results );
+    return React.createElement("ul", {className: classList}, results );
   },
 
   setSelectionIndex: function(index) {
@@ -651,8 +654,8 @@ var TypeaheadSelector = React.createClass({displayName: 'TypeaheadSelector',
   },
 
   _onClick: function(result) {
+    result.preventDefault();
     this.props.onOptionSelected(result);
-    return false;
   },
 
   _nav: function(delta) {
